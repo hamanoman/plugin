@@ -22,18 +22,58 @@
 		},
 
     // 要素スライド(メソッド内で四方の条件分岐)
-		// slide : function() {
-    //
-		// }
+		slideAction : function( target, trigger, direction, fixedTarget ) {
+			var $this = $(target);
+			var $drawerTarget = $this;
+			if ( !$('.drawerInner')[0] ) {
+	    	$drawerTarget.wrapInner( '<div class="drawerInner" data-direction="' + direction + '"></div>' );
+				$('.drawerInner').prepend('<div class="drawerInner_cover"></div>');
+	    	$drawerTarget.prepend( '<div class="drawerBg"></div>' );
+			}
+	    var $drawerInner = $('.drawerInner');
+	    var $drawerBg = $('.drawerBg');
+			$drawerInner.css({ 'height': $(window).height() });
+			$( trigger + ', .drawerBg, .drawerInner > .drawerInner_cover' ).on('click', function(e) {
+	      e.preventDefault();
+		    if (!$drawerTarget.is('.open') ) {
+		      $drawerTarget.addClass('open');
+		      if ( fixedTarget != false ) {
+		      	methods.wrapFixed( fixedTarget );
+		      }
+		      $drawerTarget.stop(true, false).fadeIn(0, function() {
+		        $drawerBg.stop(true, false).fadeIn(300,function() {
+							console.log(direction);
+		          $drawerInner.addClass( 'view' ).on('transitionend webkitTransitionEnd oTransitionEnd mozTransitionEnd',function(){
+								return;
+							});
+		        });
+		      });
+		    } else {
+		      var contentsPos = $('body').attr('data-scroll');
+					$drawerInner.removeClass( 'view' ).one('transitionend webkitTransitionEnd oTransitionEnd mozTransitionEnd',function(){
+					//ここに処理を記述
+						$drawerTarget.removeClass('open');
+						if ( fixedTarget != false ) {
+							methods.wrapFixed( fixedTarget );
+						}
+						$drawerBg.stop(true, false).fadeOut(300, function() {
+							$drawerTarget.stop(true, false).fadeOut(0);
+						});
+					});
+		    }
+	    });
+		},
 
 		// 要素フェード
-		// fade : function() {
-    //
-		// }
+		fadeAction : function() {
+			console.log();
+		}
 	}
 	$.fn.drawer = function( options ) {
 		var defaults = {
 			'trigger': '',      // トリガー
+			'action': 'slide',
+			'direction': 'right',
 			'fixed': false,      // 画面固定要素
 			'bgColor': '#000',   // 背景色
 			'speed': 300         // スピード
@@ -42,41 +82,13 @@
 		var settings = $.extend( {}, defaults, options );
 
 		return this.each( function() {
-			// methodsに移動して引数で処理変える
-			var $this = $(this);
-			var $drawerTarget = $this;
-			if ( !$('.drawerInner')[0] ) {
-	    	$drawerTarget.wrapInner( '<div class="drawerInner"></div>' );
-	    	$drawerTarget.prepend( '<div class="drawerBg"></div>' );
+			// 引数で処理変える
+			if ( settings.action == 'slide' ) {
+				methods.slideAction( this, settings.trigger, settings.direction, settings.fixed );
 			}
-	    var $drawerInner = $('.drawerInner');
-	    var $drawerBg = $('.drawerBg');
-			$drawerInner.css({ 'height': $(window).height() });
-			$( settings.trigger + ', .drawerBg' ).on('click', function(e) {
-	      e.preventDefault();
-		    if (!$drawerTarget.is('.open') ) {
-		      $drawerTarget.addClass('open');
-		      if ( settings.fixed != false ) {
-		      	methods.wrapFixed( settings.fixed );
-		      }
-		      $drawerTarget.stop(true, false).fadeIn(0, function() {
-		        $drawerBg.stop(true, false).fadeIn(300,function() {
-		          $drawerInner.animate({ 'left': 0 });
-		        });
-		      });
-		    } else {
-		      var contentsPos = $('body').attr('data-scroll');
-		      $drawerInner.animate({ 'left': '-100%' }, 500, function() {
-		      	$drawerTarget.removeClass('open');
-		        if ( settings.fixed != false ) {
-		        	methods.wrapFixed( settings.fixed );
-		        }
-		        $drawerBg.stop(true, false).fadeOut(300, function() {
-		          $drawerTarget.stop(true, false).fadeOut(0);
-		        });
-		      });
-		    }
-	    });
+			if ( settings.action == 'fade' ) {
+				methods.fadeAction( this, settings.trigger, settings.fixed );
+			}
 		});
 	};
 }( jQuery ));
